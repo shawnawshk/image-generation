@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen-image
+  labels:
+    app: qwen-image
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qwen-image
+  template:
+    metadata:
+      labels:
+        app: qwen-image
+    spec:
+      nodeSelector:
+        node.kubernetes.io/instance-type: g6e.12xlarge
+      containers:
+        - name: qwen-image
+          image: 985955614379.dkr.ecr.us-west-2.amazonaws.com/qwen-image-service:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+          resources:
+            limits:
+              nvidia.com/gpu: 4
+              memory: "300Gi"
+          volumeMounts:
+            - name: huggingface-cache
+              mountPath: /root/.cache/huggingface
+            - name: shm
+              mountPath: /dev/shm
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 180
+            periodSeconds: 60
+      volumes:
+        - name: huggingface-cache
+          hostPath:
+            path: /mnt/k8s-disks/0/models/qwen-image
+            type: DirectoryOrCreate
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "80Gi"
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen-image
+  labels:
+    app: qwen-image
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: qwen-image

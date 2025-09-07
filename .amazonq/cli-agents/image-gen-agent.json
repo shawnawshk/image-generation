@@ -1,0 +1,42 @@
+{
+  "description": "Agent for image generation service development",
+  "allowedTools": [
+    "fs_read",
+    "fs_write", 
+    "execute_bash",
+    "use_aws"
+  ],
+  "toolsSettings": {
+    "fs_read": {
+      "allowedPaths": [
+        "/home/ec2-user/image-generation/**"
+      ]
+    },
+    "fs_write": {
+      "allowedPaths": [
+        "/home/ec2-user/image-generation/**"
+      ]
+    },
+    "execute_bash": {
+      "allowedCommands": [
+        "docker-compose .*",
+        "docker .*",
+        "python .*",
+        "curl .*",
+        "ls .*",
+        "cat .*",
+        "grep .*",
+        "find .*"
+      ],
+      "allowReadOnly": true
+    },
+    "use_aws": {
+      "allowedServices": [
+        "s3",
+        "ecr",
+        "ecs",
+        "lambda"
+      ]
+    }
+  }
+}

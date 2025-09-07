@@ -1,0 +1,18 @@
+services:
+  qwen-image-ecr:
+    image: 985955614379.dkr.ecr.us-west-2.amazonaws.com/qwen-image-service:latest
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - /home/ec2-user/nvme-storage/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
