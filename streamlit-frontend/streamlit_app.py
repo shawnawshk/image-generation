@@ -44,9 +44,40 @@ prompt = st.text_area(
 
 col1, col2 = st.columns(2)
 
+# Initialize session state for synchronized values
+if 'num_steps_value' not in st.session_state:
+    st.session_state.num_steps_value = 50
+if 'cfg_scale_value' not in st.session_state:
+    st.session_state.cfg_scale_value = 4.0
+
 with col1:
-    num_steps = st.slider("Inference Steps", 10, 100, 50, help="More steps = higher quality, slower generation")
-    cfg_scale = st.slider("CFG Scale", 1.0, 10.0, 4.0, 0.5, help="Higher values follow prompt more closely")
+    # Inference Steps with synchronized input
+    st.write("**Inference Steps**")
+    col1a, col1b = st.columns([3, 1])
+    with col1a:
+        num_steps_slider = st.slider(
+            "Inference Steps Slider", 10, 50,
+            value=st.session_state.num_steps_value,
+            help="More steps = higher quality, slower generation",
+            key="steps_slider",
+            label_visibility="collapsed"
+        )
+    with col1b:
+        num_steps_input = st.number_input(
+            "Inference Steps Input", min_value=10, max_value=50,
+            value=st.session_state.num_steps_value,
+            key="steps_input",
+            label_visibility="collapsed"
+        )
+
+    # Update session state based on which widget changed
+    if num_steps_slider != st.session_state.num_steps_value:
+        st.session_state.num_steps_value = num_steps_slider
+        st.rerun()
+    elif num_steps_input != st.session_state.num_steps_value:
+        st.session_state.num_steps_value = num_steps_input
+        st.rerun()
+    num_steps = st.session_state.num_steps_value
 
 with col2:
     # Aspect ratio selection
@@ -71,6 +102,37 @@ with st.expander("🔧 Advanced Settings"):
     col1, col2 = st.columns(2)
     
     with col1:
+        # CFG Scale with synchronized input
+        st.write("**CFG Scale**")
+        cfg_col1, cfg_col2 = st.columns([3, 1])
+        with cfg_col1:
+            cfg_scale_slider = st.slider(
+                "CFG Scale Slider", 1.0, 10.0,
+                value=st.session_state.cfg_scale_value,
+                step=0.5,
+                help="Higher values follow prompt more closely",
+                key="cfg_slider",
+                label_visibility="collapsed"
+            )
+        with cfg_col2:
+            cfg_scale_input = st.number_input(
+                "CFG Scale Input", min_value=1.0, max_value=10.0,
+                value=st.session_state.cfg_scale_value,
+                step=0.5,
+                key="cfg_input",
+                label_visibility="collapsed"
+            )
+
+        # Update session state based on which widget changed
+        if cfg_scale_slider != st.session_state.cfg_scale_value:
+            st.session_state.cfg_scale_value = cfg_scale_slider
+            st.rerun()
+        elif cfg_scale_input != st.session_state.cfg_scale_value:
+            st.session_state.cfg_scale_value = cfg_scale_input
+            st.rerun()
+
+        cfg_scale = st.session_state.cfg_scale_value
+
         # Negative prompt
         negative_prompt = st.text_area(
             "Negative Prompt",
@@ -293,8 +355,9 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("Example Prompts")
 
 example_prompts = [
-    'A coffee shop entrance features a chalkboard sign reading "Qwen Coffee 😊 $2 per cup," with a neon light beside it displaying "通义千问"',
-    "A beautiful Chinese woman holding a marker with text '人工智能' written on a whiteboard behind her",
+    'Illustrate a poignant moment from a slice-of-life anime, with two high school friends sharing a heartfelt conversation under a cherry blossom tree, petals gently falling around them.',
+    'Insert a UFO landing in the background',
+    "A beautiful Chinese young woman holding a marker with text 'AI' written on a whiteboard behind her",
     "A street scene with a shop sign displaying both English 'WELCOME' and Chinese '欢迎光临' in neon lights",
     "A book cover with the title 'AI Revolution' in elegant typography, with Chinese subtitle '人工智能革命'",
     "A vintage poster showing '1984' in bold letters with Chinese characters '一九八四' underneath",
